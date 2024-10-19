@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { useZxing } from "react-zxing";
+import eruda from "eruda";
 
 const QRScanner = () => {
   const [result, setResult] = useState("");
@@ -41,6 +42,9 @@ const QRScanner = () => {
     };
 
     getCameras();
+    if (typeof window !== "undefined") {
+      eruda.init();
+    }
   }, []);
 
   useEffect(() => {
@@ -53,10 +57,13 @@ const QRScanner = () => {
     try {
       const scannedData = JSON.parse(data);
       if (scannedData.token) {
-        const response = await fetch(`/api/get-user?token=${encodeURIComponent(scannedData.token)}`, {
-          method: "GET",
-          headers: { "Content-Type": "application/json" },
-        });
+        const response = await fetch(
+          `/api/get-user?token=${encodeURIComponent(scannedData.token)}`,
+          {
+            method: "GET",
+            headers: { "Content-Type": "application/json" },
+          }
+        );
         const userData = await response.json();
         if (response.ok) {
           setUserData(userData.data);
@@ -82,18 +89,18 @@ const QRScanner = () => {
         setVerificationStatus({
           message: data.message,
           alreadyArrived: data.alreadyArrived,
-          success: true
+          success: true,
         });
       } else {
         setVerificationStatus({
           message: data.error || "Failed to verify user",
-          success: false
+          success: false,
         });
       }
     } catch (error) {
       setVerificationStatus({
         message: "Failed to verify user",
-        success: false
+        success: false,
       });
     }
   };
@@ -117,8 +124,11 @@ const QRScanner = () => {
 
   const getStatusColor = () => {
     if (!verificationStatus) return "";
-    if (verificationStatus.alreadyArrived) return "bg-yellow-100 text-yellow-700";
-    return verificationStatus.success ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700";
+    if (verificationStatus.alreadyArrived)
+      return "bg-yellow-100 text-yellow-700";
+    return verificationStatus.success
+      ? "bg-green-100 text-green-700"
+      : "bg-red-100 text-red-700";
   };
 
   return (
@@ -161,9 +171,7 @@ const QRScanner = () => {
       )}
       {verificationStatus && (
         <div className={`p-4 rounded mb-4 ${getStatusColor()}`}>
-          <p className="font-semibold">
-            {verificationStatus.message}
-          </p>
+          <p className="font-semibold">{verificationStatus.message}</p>
         </div>
       )}
       {!isScanning && (
