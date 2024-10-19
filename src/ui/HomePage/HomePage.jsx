@@ -1,7 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { useZxing } from "react-zxing";
-import eruda from "eruda";
 
 const QRScanner = () => {
   const [result, setResult] = useState("");
@@ -42,9 +41,6 @@ const QRScanner = () => {
     };
 
     getCameras();
-    if (typeof window !== "undefined") {
-      // eruda?.init();
-    }
   }, []);
 
   useEffect(() => {
