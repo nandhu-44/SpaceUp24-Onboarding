@@ -43,6 +43,11 @@ const QRScanner = () => {
     getCameras();
   }, []);
 
+  // Eruda initialization
+  useEffect(() => {
+      import("eruda").then(({ default: eruda }) => eruda.init());
+  }, []);
+
   useEffect(() => {
     if (result) {
       handleScan(result);
