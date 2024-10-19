@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { db } from '@/db/firebase';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(request) {
     try {
         // Extract the token from the URL search params
@@ -31,8 +33,6 @@ export async function GET(request) {
                 email: docData.email,
                 college: docData.college,
                 phone: docData.phone,
-                // workshop: docData.workshop,
-                // year: docData.year
             }
         }, { status: 200 });
 
