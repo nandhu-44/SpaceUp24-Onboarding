@@ -43,7 +43,7 @@ const QRScanner = () => {
 
     getCameras();
     if (typeof window !== "undefined") {
-      eruda.init();
+      // eruda?.init();
     }
   }, []);
 
