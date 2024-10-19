@@ -1,40 +1,47 @@
-import { NextResponse } from "next/server";
-import { getFirestore, collection, query, where, getDocs } from "firebase/firestore";
-import app from "@/db/firebase";
+import { NextResponse } from 'next/server';
+import { db } from '@/db/firebase';
+import { collection, query, where, getDocs, updateDoc } from 'firebase/firestore';
 
-// Initialize Firestore
-const db = getFirestore(app);
-
-export async function POST(req) {
+export async function POST(request) {
     try {
-        const { token } = await req.json();
-
-        return { token };
+        const { token } = await request.json();
 
         if (!token) {
-            return NextResponse.json({ message: "Token is required" }, { status: 400 });
+            return NextResponse.json({ error: 'Token is required' }, { status: 400 });
         }
 
-        // Query Firestore for the token in the ticketorders collection
         const ticketOrdersRef = collection(db, 'ticketorders');
-        const q = query(ticketOrdersRef, where("token", "==", token));
-
+        const q = query(ticketOrdersRef, where('token', '==', token));
         const querySnapshot = await getDocs(q);
 
         if (querySnapshot.empty) {
-            return NextResponse.json({ message: "No matching token found" }, { status: 404 });
+            return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
         }
 
-        // Extract and return the document data
-        let data = {};
-        querySnapshot.forEach(doc => {
-            data = doc.data(); // Assuming token is unique, we just get the first doc
+        // Get the document reference and data
+        const docRef = querySnapshot.docs[0].ref;
+        const docData = querySnapshot.docs[0].data();
+
+        // Check if the user is already verified
+        if (docData.arrived) {
+            return NextResponse.json({
+                message: 'User already verified!',
+                alreadyArrived: true
+            }, { status: 200 });
+        }
+
+        // Update the document to mark the user as arrived
+        await updateDoc(docRef, {
+            arrived: true
         });
 
-        return NextResponse.json(data, { status: 200 });
+        return NextResponse.json({
+            message: 'User verified successfully!',
+            alreadyArrived: false
+        }, { status: 200 });
 
     } catch (error) {
-        console.error('Error checking token:', error);
-        return NextResponse.json({ message: "Internal Server Error" }, { status: 500 });
+        console.error('Error verifying arrival:', error);
+        return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
 }

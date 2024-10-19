@@ -1,94 +1,181 @@
 "use client";
+import React, { useState, useEffect } from "react";
+import { useZxing } from "react-zxing";
 
-import React, { useState, useRef, useEffect } from 'react';
-import jsQR from 'jsqr';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+const QRScanner = () => {
+  const [result, setResult] = useState("");
+  const [cameras, setCameras] = useState([]);
+  const [selectedCamera, setSelectedCamera] = useState("");
+  const [userData, setUserData] = useState(null);
+  const [verificationStatus, setVerificationStatus] = useState(null);
+  const [error, setError] = useState("");
+  const [isScanning, setIsScanning] = useState(true);
 
-const QRCodeScanner = () => {
-  const videoRef = useRef(null);
-  const canvasRef = useRef(null);
-  const [scannedToken, setScannedToken] = useState(null);
-  const [error, setError] = useState(null);
+  const { ref } = useZxing({
+    onDecodeResult(result) {
+      setResult(result.getText());
+      setIsScanning(false);
+    },
+    constraints: {
+      video: { deviceId: selectedCamera },
+    },
+  });
 
   useEffect(() => {
-    const startCamera = async () => {
+    const getCameras = async () => {
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream;
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        const videoDevices = devices.filter(
+          (device) => device.kind === "videoinput"
+        );
+        setCameras(videoDevices);
+        if (videoDevices.length > 0) {
+          setSelectedCamera(videoDevices[0].deviceId);
         }
-      } catch (err) {
-        setError('Error accessing camera: ' + err.message);
+      } catch (error) {
+        console.error("Error getting cameras:", error);
+        setError(
+          "Failed to access cameras. Please ensure you have granted camera permissions."
+        );
       }
     };
 
-    startCamera();
-
-    return () => {
-      if (videoRef.current && videoRef.current.srcObject) {
-        videoRef.current.srcObject.getTracks().forEach(track => track.stop());
-      }
-    };
+    getCameras();
   }, []);
 
-  const scanQRCode = () => {
-    if (videoRef.current && canvasRef.current) {
-      const video = videoRef.current;
-      const canvas = canvasRef.current;
-      const context = canvas.getContext('2d');
+  useEffect(() => {
+    if (result) {
+      handleScan(result);
+    }
+  }, [result]);
 
-      if (video.readyState === video.HAVE_ENOUGH_DATA) {
-        canvas.height = video.videoHeight;
-        canvas.width = video.videoWidth;
-        context.drawImage(video, 0, 0, canvas.width, canvas.height);
-        const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
-        const code = jsQR(imageData.data, imageData.width, imageData.height);
-
-        if (code) {
-          try {
-            const ticketData = JSON.parse(code.data);
-            if (ticketData.token) {
-              setScannedToken(ticketData.token);
-              console.log('Scanned token:', ticketData.token);
-            } else {
-              setError('Invalid QR code: Missing token');
-            }
-          } catch (err) {
-            setError('Invalid QR code: Unable to parse JSON');
-          }
+  const handleScan = async (data) => {
+    try {
+      const scannedData = JSON.parse(data);
+      if (scannedData.token) {
+        const response = await fetch(`/api/get-user?token=${encodeURIComponent(scannedData.token)}`, {
+          method: "GET",
+          headers: { "Content-Type": "application/json" },
+        });
+        const userData = await response.json();
+        if (response.ok) {
+          setUserData(userData.data);
+        } else {
+          setError(userData.error || "Failed to get user data");
         }
       }
+    } catch (error) {
+      console.log("Error parsing QR code data:", error);
+      setError("Invalid QR code data");
     }
-
-    requestAnimationFrame(scanQRCode);
   };
 
-  useEffect(() => {
-    const scanInterval = requestAnimationFrame(scanQRCode);
-    return () => cancelAnimationFrame(scanInterval);
-  }, []);
+  const handleVerify = async () => {
+    try {
+      const response = await fetch("/api/verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token: JSON.parse(result).token }),
+      });
+      const data = await response.json();
+      if (response.ok) {
+        setVerificationStatus({
+          message: data.message,
+          alreadyArrived: data.alreadyArrived,
+          success: true
+        });
+      } else {
+        setVerificationStatus({
+          message: data.error || "Failed to verify user",
+          success: false
+        });
+      }
+    } catch (error) {
+      setVerificationStatus({
+        message: "Failed to verify user",
+        success: false
+      });
+    }
+  };
+
+  const handleCameraChange = (e) => {
+    setSelectedCamera(e.target.value);
+    setIsScanning(true);
+    setResult("");
+    setUserData(null);
+    setVerificationStatus(null);
+    setError("");
+  };
+
+  const resetScanner = () => {
+    setIsScanning(true);
+    setResult("");
+    setUserData(null);
+    setVerificationStatus(null);
+    setError("");
+  };
+
+  const getStatusColor = () => {
+    if (!verificationStatus) return "";
+    if (verificationStatus.alreadyArrived) return "bg-yellow-100 text-yellow-700";
+    return verificationStatus.success ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700";
+  };
 
   return (
-    <div className="p-4 max-w-md mx-auto">
-      <h1 className="text-2xl font-bold mb-4">QR Code Ticket Scanner</h1>
-      <div className="mb-4 relative">
-        <video ref={videoRef} autoPlay playsInline muted className="w-full" />
-        <canvas ref={canvasRef} className="hidden" />
-      </div>
-      {scannedToken && (
-        <Alert>
-          <AlertTitle>Success</AlertTitle>
-          <AlertDescription>Token scanned: {scannedToken}</AlertDescription>
-        </Alert>
+    <div className="max-w-md mx-auto p-4">
+      <h1 className="text-2xl font-bold mb-4">QR Code Scanner</h1>
+      {cameras.length > 0 && (
+        <select
+          value={selectedCamera}
+          onChange={handleCameraChange}
+          className="mb-4 p-2 border rounded w-full"
+        >
+          {cameras.map((camera) => (
+            <option key={camera.deviceId} value={camera.deviceId}>
+              {camera.label || `Camera ${camera.deviceId}`}
+            </option>
+          ))}
+        </select>
       )}
-      {error && (
-        <Alert variant="destructive">
-          <AlertTitle>Error</AlertTitle>
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
+      <div className="relative aspect-square mb-4">
+        {isScanning && (
+          <video ref={ref} className="w-full h-full object-cover" />
+        )}
+      </div>
+      {error && <p className="text-red-500 mb-4">{error}</p>}
+      {userData && (
+        <div className="bg-gray-100 p-4 rounded mb-4">
+          <h2 className="text-xl font-semibold mb-2">{userData.name}</h2>
+          <p>Email: {userData.email}</p>
+          <p>College: {userData.college}</p>
+          <p>Phone: {userData.phone}</p>
+          {!verificationStatus && (
+            <button
+              onClick={handleVerify}
+              className="mt-4 bg-blue-500 text-white px-4 py-2 rounded w-full"
+            >
+              Verify
+            </button>
+          )}
+        </div>
+      )}
+      {verificationStatus && (
+        <div className={`p-4 rounded mb-4 ${getStatusColor()}`}>
+          <p className="font-semibold">
+            {verificationStatus.message}
+          </p>
+        </div>
+      )}
+      {!isScanning && (
+        <button
+          onClick={resetScanner}
+          className="bg-gray-500 text-white px-4 py-2 rounded w-full"
+        >
+          Scan Another QR Code
+        </button>
       )}
     </div>
   );
 };
 
-export default QRCodeScanner;
+export default QRScanner;
