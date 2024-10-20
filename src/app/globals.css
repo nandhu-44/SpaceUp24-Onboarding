@@ -6,6 +6,24 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
+:root {
+  --font-alternox-light: "Alternox-Light", sans-serif;
+  --font-alternox: "Alternox-Regular", sans-serif;
+  --font-alternox-bold: "Alternox-Bold", sans-serif;
+}
+
+.font-alternox-bold {
+  font-family: var(--font-alternox-bold);
+}
+
+.font-alternox-regular {
+  font-family: var(--font-alternox);
+}
+
+.font-alternox-light {
+  font-family: var(--font-alternox-light);
+}
+
 @layer utilities {
   .text-balance {
     text-wrap: balance;

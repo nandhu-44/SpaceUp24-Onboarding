@@ -1,15 +1,16 @@
 import localFont from "next/font/local";
 import "./globals.css";
 
-const geistSans = localFont({
-  src: "./fonts/GeistVF.woff",
-  variable: "--font-geist-sans",
-  weight: "100 900",
+const alternoxRegular = localFont({
+  src: "./fonts/Alternox-Regular.otf",
+  variable: "--font-alternox",
+  weight: "400",
 });
-const geistMono = localFont({
-  src: "./fonts/GeistMonoVF.woff",
-  variable: "--font-geist-mono",
-  weight: "100 900",
+
+const alternoxBold = localFont({
+  src: "./fonts/Alternox-Bold.otf",
+  variable: "--font-alternox-bold",
+  weight: "500",
 });
 
 export const metadata = {
@@ -26,7 +27,7 @@ export default function RootLayout({ children }) {
         <link rel="icon" href="/favicon.svg" />
       </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${alternoxRegular.variable} ${alternoxBold.variable} antialiased bg-black`}
       >
         {children}
       </body>
