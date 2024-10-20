@@ -6,8 +6,9 @@ const UserData = ({ userData, verificationStatus, handleVerify }) => {
 
   const getStatusColor = () => {
     if (!verificationStatus) return "";
-    if (verificationStatus.alreadyArrived)
+    if (verificationStatus.alreadyArrived) {
       return "bg-yellow-200 text-yellow-700";
+    }
     return verificationStatus.success
       ? "bg-green-200 text-green-700"
       : "bg-red-200 text-red-700";
@@ -57,7 +58,8 @@ const UserData = ({ userData, verificationStatus, handleVerify }) => {
       {/* Show loading animation when verifying */}
       {isVerifying && !verificationStatus && (
         <div className="mt-4 flex justify-center">
-          <div className="loader ease-linear rounded-full border-8 border-t-8 border-gray-200 h-12 w-12"></div>
+          <div className="loader ease-linear rounded-full border-8 border-t-8 border-gray-200 h-12 w-12">
+          </div>
         </div>
       )}
 
@@ -71,7 +73,8 @@ const UserData = ({ userData, verificationStatus, handleVerify }) => {
       )}
 
       {/* Loader CSS */}
-      <style jsx>{`
+      <style jsx>
+        {`
         .loader {
           border-top-color: #3498db;
           -webkit-animation: spin 1s ease-in-out infinite;
@@ -95,7 +98,8 @@ const UserData = ({ userData, verificationStatus, handleVerify }) => {
             transform: rotate(360deg);
           }
         }
-      `}</style>
+      `}
+      </style>
     </div>
   );
 };

@@ -1,5 +1,5 @@
 import Image from "next/image";
-import React, { useState, useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useZxing } from "react-zxing";
 import UserData from "@/components/ui/UserData";
 
@@ -29,6 +29,7 @@ const QRScanner = () => {
     constraints: {
       video: { deviceId: selectedCamera },
     },
+    paused: isPaused,
   });
 
   useEffect(() => {
@@ -36,12 +37,15 @@ const QRScanner = () => {
       try {
         const devices = await navigator.mediaDevices.enumerateDevices();
         const videoDevices = devices.filter(
-          (device) => device.kind === "videoinput"
+          (device) => device.kind === "videoinput",
         );
         setCameras(videoDevices);
 
         const savedCameraId = localStorage.getItem("selectedCameraId");
-        if (savedCameraId && videoDevices.some(device => device.deviceId === savedCameraId)) {
+        if (
+          savedCameraId &&
+          videoDevices.some((device) => device.deviceId === savedCameraId)
+        ) {
           setSelectedCamera(savedCameraId);
         } else if (videoDevices.length > 0) {
           setSelectedCamera(videoDevices[0].deviceId);
@@ -49,7 +53,7 @@ const QRScanner = () => {
       } catch (error) {
         console.error("Error getting cameras:", error);
         setError(
-          "Failed to access cameras. Please ensure you have granted camera permissions."
+          "Failed to access cameras. Please ensure you have granted camera permissions.",
         );
       }
     };
@@ -73,7 +77,7 @@ const QRScanner = () => {
           {
             method: "GET",
             headers: { "Content-Type": "application/json" },
-          }
+          },
         );
         const userData = await response.json();
         if (response.ok) {
@@ -137,12 +141,12 @@ const QRScanner = () => {
   };
 
   return (
-    <div className="max-w-md mx-auto p-4">
+    <div className="mx-auto max-w-md p-4">
       {cameras.length > 0 && (
         <select
           value={selectedCamera}
           onChange={(e) => handleCameraChange(e)}
-          className="mb-4 p-2 border rounded bg-slate-800 border-white focus:ring-0 text-white font-alternox-regular text-sm w-full"
+          className="font-alternox-regular mb-4 w-full rounded border border-white bg-slate-800 p-2 text-sm text-white hover:cursor-pointer focus:ring-0"
         >
           {cameras.map((camera) => (
             <option
@@ -157,10 +161,10 @@ const QRScanner = () => {
       )}
 
       {/* Scanner */}
-      <div className="relative aspect-square mb-4">
+      <div className="relative mb-4 aspect-square">
         <video
           ref={ref}
-          className={`w-full h-full object-cover rounded-sm ${
+          className={`h-full w-full rounded-sm object-cover ${
             isPaused ? "hidden" : ""
           }`}
         />
@@ -176,14 +180,14 @@ const QRScanner = () => {
                   0,
                   0,
                   canvas.width,
-                  canvas.height
+                  canvas.height,
                 );
               }
             }}
-            className="w-full h-full object-cover rounded-sm"
+            className="h-full w-full rounded-sm object-cover"
           />
         )}
-        <div className="absolute inset-0 flex items-center font-bold justify-center">
+        <div className="absolute inset-0 flex items-center justify-center font-bold">
           <Image
             src="/qr-frame.svg"
             alt="QR Frame"
@@ -196,14 +200,15 @@ const QRScanner = () => {
 
       {/* Loader */}
       {isLoading && (
-        <div className="flex justify-center items-center mb-4">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
+        <div className="mb-4 flex items-center justify-center">
+          <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-white">
+          </div>
         </div>
       )}
 
       {/* Error */}
       {error && (
-        <p className="font-alternox-bold text-sm text-red-500 mb-4">{error}</p>
+        <p className="font-alternox-bold mb-4 text-sm text-red-500">{error}</p>
       )}
 
       {/* User Data */}
@@ -219,7 +224,7 @@ const QRScanner = () => {
       {!isScanning && !isLoading && (
         <button
           onClick={() => resetScanner()}
-          className="bg-slate-800 font-alternox-regular text-sm text-white px-4 py-2 rounded w-full"
+          className="font-alternox-regular mb-12 w-full rounded bg-gradient-to-br from-emerald-600 via-green-500 to-emerald-600 px-4 py-2 text-sm text-white"
         >
           Continue Scanning
         </button>
