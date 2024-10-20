@@ -10,7 +10,7 @@ const QRScanner = () => {
   const [userData, setUserData] = useState(null);
   const [verificationStatus, setVerificationStatus] = useState(null);
   const [error, setError] = useState("");
-  const [isScanning, setIsScanning] = useState(false);
+  const [isScanning, setIsScanning] = useState(true);
 
   const { ref } = useZxing({
     onDecodeResult(result) {
