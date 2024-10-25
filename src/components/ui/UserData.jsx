@@ -39,7 +39,7 @@ const UserData = ({ userData, verificationStatus, handleVerify }) => {
   return (
     <div
       className={`${
-        userData?.suspicious ? "bg-red-300" : "bg-gray-100"
+        userData?.suspicious ? "bg-red-300" : userData?.workshop == "Quiz" ? "bg-green-500" : userData?.workshop == "Dr. Yedu Krishna" ? "bg-yellow-500" : userData?.workshop == "AMAL SREE AJITH" ? "bg-red-800" : userData?.workshop == "TEAM MARUTSAKA" ? "bg-blue-800" : "bg-gray-100"
       } font-alternox-regular mb-4 rounded-lg p-6 shadow-lg`}
     >
       <h2 className="mb-4 flex items-center justify-center text-center text-2xl font-semibold text-gray-800">
