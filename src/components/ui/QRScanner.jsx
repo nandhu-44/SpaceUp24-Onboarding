@@ -73,7 +73,7 @@ const QRScanner = () => {
       const scannedData = JSON.parse(data);
       if (scannedData.token) {
         const response = await fetch(
-          `/api/get-user?token=${encodeURIComponent(scannedData.token)}`,
+          `/api/v1/get-user?token=${encodeURIComponent(scannedData.token)}`,
           {
             method: "GET",
             headers: { "Content-Type": "application/json" },
@@ -97,7 +97,7 @@ const QRScanner = () => {
 
   const handleVerify = async () => {
     try {
-      const response = await fetch("/api/verify", {
+      const response = await fetch("/api/v0/verify", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ token: JSON.parse(result).token }),
@@ -200,8 +200,8 @@ const QRScanner = () => {
 
       {/* Loader */}
       {isLoading && (
-        <div className="mb-4 flex items-center justify-center">
-          <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-white">
+        <div className="my-10 flex items-center justify-center">
+          <div className="h-20 w-20 animate-spin rounded-full border-8 border-blue-500 border-b-black">
           </div>
         </div>
       )}
