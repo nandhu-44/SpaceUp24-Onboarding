@@ -100,7 +100,7 @@ const QRScanner = () => {
       const response = await fetch("/api/v0/verify", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token: JSON.parse(result).token }),
+        body: JSON.stringify({ token: result }),
       });
       const data = await response.json();
       if (response.ok) {
