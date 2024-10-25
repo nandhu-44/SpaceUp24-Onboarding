@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { db } from "@/db/firebase";
+import { db, db2 } from "@/db/firebase";
 import {
   collection,
   getDocs,
@@ -16,12 +16,23 @@ export async function POST(request) {
       return NextResponse.json({ error: "Token is required" }, { status: 400 });
     }
 
+    // Check first database (db)
     const ticketOrdersRef = collection(db, "ticketorders");
     const q = query(ticketOrdersRef, where("token", "==", token));
-    const querySnapshot = await getDocs(q);
+    let querySnapshot = await getDocs(q);
 
+    // If not found in first database, check second database (db2)
+    let useSecondDB = false;
     if (querySnapshot.empty) {
-      return NextResponse.json({ error: "Invalid token" }, { status: 401 });
+      const ticketOrdersRef2 = collection(db2, "ticketorders");
+      const q2 = query(ticketOrdersRef2, where("token", "==", token));
+      querySnapshot = await getDocs(q2);
+      useSecondDB = true;
+
+      // If not found in either database, return error
+      if (querySnapshot.empty) {
+        return NextResponse.json({ error: "Invalid token" }, { status: 401 });
+      }
     }
 
     // Get the document reference and data
@@ -33,6 +44,7 @@ export async function POST(request) {
       return NextResponse.json({
         message: "User already verified!",
         alreadyArrived: true,
+        database: useSecondDB ? "db2" : "db1"
       }, { status: 200 });
     }
 
@@ -44,6 +56,7 @@ export async function POST(request) {
     return NextResponse.json({
       message: "User verified successfully!",
       alreadyArrived: false,
+      database: useSecondDB ? "db2" : "db1"
     }, { status: 200 });
   } catch (error) {
     console.error("Error verifying arrival:", error);
