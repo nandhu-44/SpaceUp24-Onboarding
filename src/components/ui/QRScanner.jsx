@@ -70,10 +70,10 @@ const QRScanner = () => {
   const handleScan = async (data) => {
     setIsLoading(true);
     try {
-      const scannedData = JSON.parse(data);
-      if (scannedData.token) {
+      const scannedData = data;
+      if (scannedData) {
         const response = await fetch(
-          `/api/v1/get-user?token=${encodeURIComponent(scannedData.token)}`,
+          `/api/v1/get-user?token=${encodeURIComponent(scannedData)}`,
           {
             method: "GET",
             headers: { "Content-Type": "application/json" },
