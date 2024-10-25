@@ -22,8 +22,8 @@ const firebaseConfig2 = {
 };
 
 // Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const app2 = initializeApp(firebaseConfig2);
+const app = initializeApp(firebaseConfig, "app1");
+const app2 = initializeApp(firebaseConfig2, "app2");
 export const db = getFirestore(app);
 export const db2 = getFirestore(app2);
 
