@@ -98,7 +98,7 @@ const QRScanner = () => {
   const handleVerify = async () => {
     try {
       console.log(result)
-      const response = await fetch("/api/v1/verify", {
+      const response = await fetch("/api/v0/verify", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ token: result }),
