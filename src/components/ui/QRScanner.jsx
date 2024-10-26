@@ -117,6 +117,7 @@ const QRScanner = () => {
         });
       }
     } catch (error) {
+      console.log(error)
       setVerificationStatus({
         message: "Failed to verify user",
         success: false,
