@@ -97,27 +97,42 @@ const QRScanner = () => {
 
   const handleVerify = async () => {
     try {
-      console.log(result)
-      const response = await fetch("/api/v0/verify", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token: result }),
-      });
-      const data = await response.json();
-      if (response.ok) {
+      console.log(result);
+      const filePath = path.join(process.cwd(), 'tokens.txt');
+      
+      // Try to read existing tokens
+      let existingTokens = [];
+      try {
+        const fileContent = await fs.readFile(filePath, 'utf8');
+        existingTokens = fileContent.split('\n').filter(token => token.trim());
+      } catch (err) {
+        // File doesn't exist yet, that's ok
+        if (err.code !== 'ENOENT') {
+          throw err;
+        }
+      }
+  
+      // Check if token already exists
+      if (existingTokens.includes(result)) {
         setVerificationStatus({
-          message: data.message,
-          alreadyArrived: data.alreadyArrived,
+          message: "Token already verified",
+          alreadyArrived: true,
           success: true,
         });
-      } else {
-        setVerificationStatus({
-          message: data.error || "Failed to verify user",
-          success: false,
-        });
+        return;
       }
+  
+      // Append new token
+      await fs.appendFile(filePath, result + '\n');
+  
+      setVerificationStatus({
+        message: "Successfully verified",
+        alreadyArrived: false,
+        success: true,
+      });
+  
     } catch (error) {
-      console.log(error)
+      console.log(error);
       setVerificationStatus({
         message: "Failed to verify user",
         success: false,
