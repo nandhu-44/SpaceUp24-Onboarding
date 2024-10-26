@@ -1,6 +1,18 @@
 import { NextResponse } from "next/server";
-import { promises as fs } from 'fs';
-import path from 'path';
+import { google } from 'googleapis';
+
+// Initialize Google Sheets API
+const auth = new google.auth.GoogleAuth({
+  credentials: {
+    client_email: process.env.GOOGLE_CLIENT_EMAIL,
+    private_key: process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, '\n'),
+  },
+  scopes: ['https://www.googleapis.com/auth/spreadsheets'],
+});
+
+const sheets = google.sheets({ version: 'v4', auth });
+const SPREADSHEET_ID = process.env.GOOGLE_SHEET_ID; // Your Google Sheet ID
+const RANGE = 'Sheet1!A:A'; // Assuming tokens are in column A
 
 export async function POST(request) {
   try {
@@ -10,22 +22,14 @@ export async function POST(request) {
       return NextResponse.json({ error: "Token is required" }, { status: 400 });
     }
 
-    const filePath = path.join(process.cwd(), 'tokens.txt');
-    
-    // Read existing tokens
-    let existingTokens = [];
-    try {
-      const fileContent = await fs.readFile(filePath, 'utf8');
-      existingTokens = fileContent.split('\n').filter(t => t.trim());
-    } catch (err) {
-      // File doesn't exist yet, that's ok
-      if (err.code !== 'ENOENT') {
-        console.error('Error reading file:', err);
-        return NextResponse.json({ error: "Internal server error" }, { status: 500 });
-      }
-    }
-
     // Check if token already exists
+    const response = await sheets.spreadsheets.values.get({
+      spreadsheetId: SPREADSHEET_ID,
+      range: RANGE,
+    });
+
+    const existingTokens = response.data.values?.flat() || [];
+    
     if (existingTokens.includes(token)) {
       return NextResponse.json({
         message: "User already verified!",
@@ -33,8 +37,16 @@ export async function POST(request) {
       }, { status: 200 });
     }
 
-    // Append new token to file
-    await fs.appendFile(filePath, token + '\n');
+    // Append new token to sheet
+    await sheets.spreadsheets.values.append({
+      spreadsheetId: SPREADSHEET_ID,
+      range: RANGE,
+      valueInputOption: 'RAW',
+      insertDataOption: 'INSERT_ROWS',
+      requestBody: {
+        values: [[token]]
+      },
+    });
 
     return NextResponse.json({
       message: "User verified successfully!",
